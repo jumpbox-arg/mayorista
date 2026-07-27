@@ -53,6 +53,10 @@ BLOCK = (
 PLATAFORMA = ("tiendanube.com", "mitiendanube.com", "mercadoshops.com",
               "mercadolibre.com", "empretienda.com", "wix.com")
 
+# TLDs de prueba/internos que NO son dominios reales de internet.
+BAD_TLD = ("loc", "local", "localhost", "test", "invalid", "example",
+           "lan", "internal", "home", "corp", "dev", "min")
+
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/121 Safari/537.36")
 
@@ -76,17 +80,31 @@ def _es_asset(mail: str) -> bool:
 
 
 def _tld_valido(mail: str) -> bool:
-    dominio = mail.split("@")[-1]
+    dominio = mail.split("@")[-1].lower()
     if "." not in dominio:
         return False
-    tld = dominio.rsplit(".", 1)[-1].lower()
-    return tld.isalpha() and 2 <= len(tld) <= 24 and tld not in ASSET_EXT
+    labels = dominio.split(".")
+    tld = labels[-1]
+    if not (tld.isalpha() and 2 <= len(tld) <= 24):
+        return False
+    if tld in ASSET_EXT or tld in BAD_TLD:
+        return False
+    # el segundo nivel (ej. 'e' en 'e.loc', o 'x' en 'x.com') debe ser plausible:
+    # los dominios reales no tienen etiquetas de 1 sola letra tipo 'st@e.loc'.
+    if len(labels) >= 2 and len(labels[-2]) < 2:
+        return False
+    return True
 
 
 def _desofuscar(texto: str) -> str:
+    """
+    Convierte 'info (at) dominio (punto) com' -> 'info@dominio.com'.
+    SOLO actúa cuando 'at/arroba/dot/punto' vienen ENTRE paréntesis o corchetes.
+    Nunca toca palabras normales (evita corromper 'location' -> 'loc@ion').
+    """
     t = html.unescape(texto)
-    t = re.sub(r"\s*\(?\s*(?:at|arroba)\s*\)?\s*", "@", t, flags=re.I)
-    t = re.sub(r"\s*\(?\s*(?:dot|punto)\s*\)?\s*", ".", t, flags=re.I)
+    t = re.sub(r"[\(\[\{]\s*(?:at|arroba)\s*[\)\]\}]", "@", t, flags=re.I)
+    t = re.sub(r"[\(\[\{]\s*(?:dot|punto)\s*[\)\]\}]", ".", t, flags=re.I)
     return t
 
 
