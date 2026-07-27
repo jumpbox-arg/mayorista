@@ -66,8 +66,10 @@ class CRM:
         if nota is not None:
             col = self._col_idx[self.columnas["notas"]]
             peticiones.append({"range": _a1(fila_real, col), "values": [[nota]]})
-        for p in peticiones:
-            self.ws.update(p["range"], p["values"])
+        # batch_update tiene firma estable en gspread 5.x y 6.x (a diferencia de
+        # worksheet.update, que cambió el orden de argumentos entre versiones).
+        if peticiones:
+            self.ws.batch_update(peticiones, value_input_option="USER_ENTERED")
 
     # ---- escritura (Trabajo 2) -------------------------------------------
     def agregar_filas(self, filas_dict: list):
