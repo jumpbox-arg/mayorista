@@ -1,0 +1,67 @@
+# ============================================================================
+# Configuración del cliente JumpBox (marca argentina de plantillas de carbono).
+# CRM de leads mayoristas de negocios deportivos.
+# Para replicar en otro ecommerce: copiá config/_plantilla.yaml y editalo.
+# ============================================================================
+
+cliente:
+  nombre: "JumpBox"
+  marca: "plantillas de fibra de carbono"
+  pais: "Argentina"
+
+sheet:
+  id: "1jd-fiXDaf46yduoy9uFV4cOJl8eQi8JATI4fPvBdazU"
+  hoja: "Hoja 1"
+  fila_encabezado: 1
+
+# Estructura EXACTA de 23 columnas del CRM JumpBox (respetada al pie de la letra)
+columnas:
+  id: "ID"
+  fecha_carga: "FECHA_CARGA"
+  empresa: "EMPRESA"
+  tipo: "TIPO"
+  ciudad: "CIUDAD"
+  provincia: "PROVINCIA"
+  contacto: "CONTACTO"
+  email: "EMAIL"
+  telefono: "TELEFONO"
+  instagram: "INSTAGRAM"
+  web: "WEB"
+  fuente: "FUENTE"
+  estado: "ESTADO"
+  notas: "NOTAS"
+  batch: "COWORK_BATCH"
+
+ids:
+  prefijo_id: "B"
+  prefijo_batch: "BATCH_"
+
+enriquecimiento:
+  paths: ["", "contacto", "contact", "nosotros", "about", "institucional",
+          "quienes-somos", "contactanos", "atencion-al-cliente"]
+  prioridad: ["ventas", "compras", "mayorista", "mayoreo", "info", "hola", "contacto"]
+  estado_nuevo: "NUEVO"
+  fuente: "Google Maps"
+  nota_sin_email: "sin mail — ir por WhatsApp"
+
+mapas:
+  provincia_por_defecto: "Buenos Aires"
+  max_por_busqueda: 60
+  # rubros ordenados por probabilidad de conversión (ver keywords_rubros del paquete)
+  rubros:
+    - "tienda de deportes"
+    - "ortopedia"
+    - "dietética deportiva"
+    - "suplementos deportivos"
+    - "tienda de running"
+    - "kinesiología deportiva"
+    - "podología deportiva"
+    - "gimnasio"
+    - "box de crossfit"
+    - "club deportivo"
+  ciudades:
+    - "Córdoba"
+    - "Rosario"
+    - "Mendoza"
+    - "La Plata"
+    - "Mar del Plata"

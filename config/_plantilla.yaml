@@ -1,0 +1,64 @@
+# ============================================================================
+# PLANTILLA DE CONFIGURACIÓN — copiá este archivo para cada ecommerce nuevo.
+#   cp config/_plantilla.yaml config/miclientenuevo.yaml
+# Después editás los valores y corrés:
+#   python scripts/run.py enriquecer --config config/miclientenuevo.yaml
+# Todo el comportamiento del sistema sale de acá. El código NO se toca.
+# ============================================================================
+
+cliente:
+  nombre: "NOMBRE DEL ECOMMERCE"
+  marca: "qué vende (ej. plantillas de fibra de carbono)"
+  pais: "Argentina"
+
+# --- El CRM (Google Sheet) --------------------------------------------------
+sheet:
+  id: "PEGA_ACA_EL_ID_DEL_SHEET"   # está en la URL del Sheet, entre /d/ y /edit
+  hoja: "Hoja 1"                    # nombre de la pestaña donde está el CRM
+  fila_encabezado: 1                # en qué fila están los títulos de columna
+
+# --- Mapeo de columnas ------------------------------------------------------
+# Izquierda = nombre interno del sistema (NO tocar).
+# Derecha = cómo se llama esa columna EN TU Sheet (podés cambiarlo).
+columnas:
+  id: "ID"
+  fecha_carga: "FECHA_CARGA"
+  empresa: "EMPRESA"
+  tipo: "TIPO"
+  ciudad: "CIUDAD"
+  provincia: "PROVINCIA"
+  contacto: "CONTACTO"
+  email: "EMAIL"
+  telefono: "TELEFONO"
+  instagram: "INSTAGRAM"
+  web: "WEB"
+  fuente: "FUENTE"
+  estado: "ESTADO"
+  notas: "NOTAS"
+  batch: "COWORK_BATCH"
+
+# --- Numeración de IDs y batches -------------------------------------------
+ids:
+  prefijo_id: "B"          # genera B001, B002, ...
+  prefijo_batch: "BATCH_"  # genera BATCH_001, BATCH_002, ...
+
+# --- Trabajo 1: enriquecer emails ------------------------------------------
+enriquecimiento:
+  # páginas donde suele estar el mail, en orden de probabilidad
+  paths: ["", "contacto", "contact", "nosotros", "about", "institucional",
+          "quienes-somos", "contactanos", "atencion-al-cliente"]
+  # si hay varios mails, cuál preferir (por prefijo antes de la @)
+  prioridad: ["ventas", "compras", "mayorista", "mayoreo", "info", "hola", "contacto"]
+  estado_nuevo: "NUEVO"
+  fuente: "Google Maps"
+  nota_sin_email: "sin mail — ir por WhatsApp"
+
+# --- Trabajo 2: scrapear leads nuevos de Google Maps -----------------------
+mapas:
+  provincia_por_defecto: "Buenos Aires"
+  max_por_busqueda: 60
+  rubros:
+    - "tienda de deportes"
+  ciudades:
+    - "Córdoba"
+    - "Rosario"

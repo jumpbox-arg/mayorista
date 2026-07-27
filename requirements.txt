@@ -1,0 +1,6 @@
+# Motor de minería mayorista — dependencias
+requests>=2.31        # descargar las webs de los negocios
+beautifulsoup4>=4.12  # parsear HTML y encontrar mails/mailto de forma robusta
+PyYAML>=6.0           # leer los archivos de configuración por cliente
+gspread>=6.0          # leer y escribir el Google Sheet (CRM)
+google-auth>=2.28     # autenticación con la credencial de servicio de Google
