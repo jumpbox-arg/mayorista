@@ -38,16 +38,21 @@ El **código no se toca nunca**. Todo el comportamiento vive en el YAML del clie
 # 1. Instalar dependencias
 pip install -r requirements.txt
 
-# 2. Generar la credencial de Google (una sola vez)
-#    → seguí docs/SETUP_CREDENCIAL.md
+# 2. Autenticarte con Google (elegí UNA, una sola vez):
+#    · Opción A (recomendada): login con tu usuario → docs/SETUP_OAUTH.md
+#    · Opción 2: cuenta de servicio → docs/SETUP_CREDENCIAL.md
+#      (ojo: puede estar bloqueada por política de la organización)
 
 # 3. Prueba (NO escribe nada, solo muestra qué haría)
-python scripts/run.py enriquecer --config config/jumpbox.yaml --limite 10
+python scripts/run.py enriquecer --config config/jumpbox.yaml --oauth --limite 10
 
 # 4. Aplicar de verdad al Sheet
-python scripts/run.py enriquecer --config config/jumpbox.yaml \
-    --aplicar --credencial credenciales/jumpbox.json
+python scripts/run.py enriquecer --config config/jumpbox.yaml --oauth --aplicar
 ```
+
+> 💡 **¿Cuál elegir?** Si tu organización bloquea las llaves de cuenta de
+> servicio (`iam.disableServiceAccountKeyCreation`), usá la **Opción A (OAuth)**:
+> entra con tu propio usuario y no toca ninguna política.
 
 ---
 

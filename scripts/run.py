@@ -34,21 +34,25 @@ from src import scrapear_maps as t2
 
 
 def _crm(cfg, args):
-    """Abre el CRM: Google Sheet (con credencial) o CSV (plan B)."""
+    """Abre el CRM: OAuth (tu usuario), cuenta de servicio, o CSV (plan B)."""
     if args.csv_in:
         from src.sheets import CRMCsv
         return CRMCsv(args.csv_in, cfg.columnas), "csv"
     from src.sheets import CRM
+    nombre = Path(args.config).stem
+    # Opción A: login con tu propio usuario (no lo frena la política de la org)
+    if args.oauth:
+        client = args.oauth_client or f"credenciales/{nombre}_oauth.json"
+        token = f"credenciales/{nombre}_token.json"
+        return CRM.abrir_oauth(cfg, client, token), "sheet (oauth)"
+    # Opción 2: cuenta de servicio
     if args.aplicar and not args.credencial:
-        sys.exit("ERROR: para --aplicar en el Sheet necesitás --credencial <archivo.json>. "
-                 "Ver docs/SETUP_CREDENCIAL.md (o usá --csv-in para modo CSV).")
-    cred = args.credencial or _cred_por_defecto(args.config)
+        sys.exit("ERROR: para escribir en el Sheet elegí una autenticación:\n"
+                 "  --oauth                (login con tu usuario, ver docs/SETUP_OAUTH.md)\n"
+                 "  --credencial <j.json>  (cuenta de servicio, ver docs/SETUP_CREDENCIAL.md)\n"
+                 "  --csv-in <archivo.csv> (modo CSV, sin credenciales)")
+    cred = args.credencial or f"credenciales/{nombre}.json"
     return CRM.abrir(cfg, cred), "sheet"
-
-
-def _cred_por_defecto(ruta_config):
-    nombre = Path(ruta_config).stem
-    return f"credenciales/{nombre}.json"
 
 
 def cmd_enriquecer(args):
@@ -106,6 +110,10 @@ def main():
     comun.add_argument("--config", required=True, help="Ruta al YAML del cliente.")
     comun.add_argument("--aplicar", action="store_true", help="Escribe de verdad (default: prueba).")
     comun.add_argument("--credencial", help="Ruta al JSON de la cuenta de servicio de Google.")
+    comun.add_argument("--oauth", action="store_true",
+                       help="Login con TU usuario de Google (Opción A). Ver docs/SETUP_OAUTH.md.")
+    comun.add_argument("--oauth-client",
+                       help="Ruta al JSON del cliente OAuth (default: credenciales/<cliente>_oauth.json).")
     comun.add_argument("--csv-in", help="Modo CSV: leer de este archivo en vez del Sheet.")
     comun.add_argument("--csv-out", help="Modo CSV: guardar el resultado en este archivo.")
 

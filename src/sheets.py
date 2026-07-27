@@ -2,8 +2,10 @@
 """
 Capa de acceso al CRM (Google Sheet) — lectura y escritura seguras.
 
-Autenticación por CUENTA DE SERVICIO de Google (credencial JSON). Ver la guía
-en docs/SETUP_CREDENCIAL.md para generarla una sola vez.
+Dos formas de autenticar (ambas soportadas):
+  - Opción A (OAuth): login con TU usuario de Google. No usa cuenta de
+    servicio, así que no la frena la política de la org. Ver docs/SETUP_OAUTH.md.
+  - Opción 2 (cuenta de servicio): credencial JSON. Ver docs/SETUP_CREDENCIAL.md.
 
 REGLAS DE SEGURIDAD (no negociables, están en el código a propósito):
   - Nunca borra filas ni columnas.
@@ -28,13 +30,46 @@ class CRM:
         # nombre real de columna -> índice de columna (1-based) en el Sheet
         self._col_idx = {h: i + 1 for i, h in enumerate(self._encabezados)}
 
-    # ---- factory ----------------------------------------------------------
+    SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+
+    # ---- factory: cuenta de servicio (Opción 2) --------------------------
     @classmethod
     def abrir(cls, cfg, ruta_credencial: str) -> "CRM":
         import gspread
         from google.oauth2.service_account import Credentials
-        scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-        creds = Credentials.from_service_account_file(ruta_credencial, scopes=scopes)
+        creds = Credentials.from_service_account_file(ruta_credencial, scopes=cls.SCOPES)
+        return cls._desde_creds(cfg, creds)
+
+    # ---- factory: login con tu propio usuario (Opción A, OAuth) ----------
+    @classmethod
+    def abrir_oauth(cls, cfg, client_secret: str,
+                    token_cache: str = "credenciales/token.json") -> "CRM":
+        """
+        Entra al Sheet como TU usuario de Google (dueño del Sheet).
+        No usa cuenta de servicio, así que no lo frena la política de la org.
+        La primera vez abre el navegador para que autorices; después guarda un
+        token y ya no vuelve a pedir login.
+        """
+        import gspread
+        from google.oauth2.credentials import Credentials as UserCreds
+        from google_auth_oauthlib.flow import InstalledAppFlow
+        from google.auth.transport.requests import Request
+
+        creds = None
+        if Path(token_cache).exists():
+            creds = UserCreds.from_authorized_user_file(token_cache, cls.SCOPES)
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(client_secret, cls.SCOPES)
+                creds = flow.run_local_server(port=0)  # abre el navegador una vez
+            Path(token_cache).write_text(creds.to_json(), encoding="utf-8")
+        return cls._desde_creds(cfg, creds)
+
+    @classmethod
+    def _desde_creds(cls, cfg, creds) -> "CRM":
+        import gspread
         gc = gspread.authorize(creds)
         sh = gc.open_by_key(cfg.sheet["id"])
         ws = sh.worksheet(cfg.sheet.get("hoja")) if cfg.sheet.get("hoja") else sh.sheet1
