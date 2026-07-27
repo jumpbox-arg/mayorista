@@ -26,6 +26,7 @@ columnas:
   email: "EMAIL"
   telefono: "TELEFONO"
   instagram: "INSTAGRAM"
+  whatsapp: "WHATSAPP"
   web: "WEB"
   fuente: "FUENTE"
   estado: "ESTADO"

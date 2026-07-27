@@ -28,6 +28,21 @@ def _digitos(tel: str) -> str:
     return re.sub(r"\D", "", tel or "")
 
 
+def _wa(tel: str) -> str:
+    """Deriva un WhatsApp del teléfono si parece celular argentino (link wa.me)."""
+    d = _digitos(tel)
+    if not d:
+        return ""
+    # normalizar a formato internacional AR (54) con 9 para celular
+    if d.startswith("0"):
+        d = d[1:]
+    if "15" in (tel or "") or len(d) >= 10:
+        if not d.startswith("54"):
+            d = "54" + d
+        return f"https://wa.me/{d}"
+    return ""
+
+
 def es_duplicado(negocio, existentes) -> bool:
     nom = _norm(negocio.get("empresa"))
     tel = _digitos(negocio.get("telefono"))
@@ -128,6 +143,7 @@ def scrapear(crm, cfg, api_key, aplicar=False, rubros=None, ciudades=None):
             "id": gen_id(i), "fecha_carga": hoy, "empresa": neg["empresa"],
             "tipo": neg["tipo"], "ciudad": neg["ciudad"], "provincia": neg["provincia"],
             "email": "sin email", "telefono": neg["telefono"],
+            "whatsapp": _wa(neg["telefono"]),
             "instagram": neg["instagram"], "web": neg["web"],
             "fuente": cfg.enriquecimiento["fuente"],
             "estado": cfg.enriquecimiento["estado_nuevo"], "batch": batch,
