@@ -164,3 +164,51 @@ class CRMCsv:
             w = csv.DictWriter(f, fieldnames=self._campos)
             w.writeheader()
             w.writerows(self._filas)
+
+
+# --------------------------------------------------------------------------
+# CRM como archivo Excel local (.xlsx) — 100% sin Google, todo automático.
+# El sistema lee y escribe el mismo archivo en tu compu. Ideal cuando la
+# organización bloquea el acceso por API al Google Sheet.
+# --------------------------------------------------------------------------
+class CRMXlsx:
+    def __init__(self, ruta: str, columnas: dict, hoja: str = None, fila_encabezado: int = 1):
+        from openpyxl import load_workbook
+        self.ruta = Path(ruta)
+        self.columnas = columnas
+        self.fila_encabezado = fila_encabezado
+        self.wb = load_workbook(self.ruta)
+        self.ws = self.wb[hoja] if hoja and hoja in self.wb.sheetnames else self.wb.active
+        self._encabezados = [c.value for c in self.ws[fila_encabezado]]
+        # nombre real de columna -> índice (1-based)
+        self._col_idx = {h: i + 1 for i, h in enumerate(self._encabezados) if h}
+
+    def leer_filas(self):
+        inv = {v: k for k, v in self.columnas.items()}  # real -> logico
+        filas = []
+        for n in range(self.fila_encabezado + 1, self.ws.max_row + 1):
+            reg = {"_fila": n}
+            for real, col in self._col_idx.items():
+                if real in inv:
+                    val = self.ws.cell(row=n, column=col).value
+                    reg[inv[real]] = "" if val is None else str(val)
+            filas.append(reg)
+        return filas
+
+    def escribir_email(self, fila_real, email=None, nota=None):
+        if email is not None:
+            self.ws.cell(row=fila_real, column=self._col_idx[self.columnas["email"]], value=email)
+        if nota is not None:
+            self.ws.cell(row=fila_real, column=self._col_idx[self.columnas["notas"]], value=nota)
+
+    def agregar_filas(self, filas_dict: list):
+        inv = {v: k for k, v in self.columnas.items()}
+        for reg in filas_dict:
+            fila = []
+            for real in self._encabezados:
+                logico = inv.get(real)
+                fila.append(reg.get(logico, "") if logico else "")
+            self.ws.append(fila)
+
+    def guardar(self, ruta_salida=None):
+        self.wb.save(ruta_salida or self.ruta)

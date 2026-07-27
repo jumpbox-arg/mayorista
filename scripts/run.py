@@ -34,7 +34,11 @@ from src import scrapear_maps as t2
 
 
 def _crm(cfg, args):
-    """Abre el CRM: OAuth (tu usuario), cuenta de servicio, o CSV (plan B)."""
+    """Abre el CRM: Excel local, OAuth, cuenta de servicio, o CSV."""
+    if args.xlsx_in:
+        from src.sheets import CRMXlsx
+        return CRMXlsx(args.xlsx_in, cfg.columnas, cfg.sheet.get("hoja"),
+                       cfg.sheet.get("fila_encabezado", 1)), "xlsx"
     if args.csv_in:
         from src.sheets import CRMCsv
         return CRMCsv(args.csv_in, cfg.columnas), "csv"
@@ -70,6 +74,8 @@ def cmd_enriquecer(args):
 
     if modo == "csv" and args.aplicar:
         crm.guardar(args.csv_out or args.csv_in)
+    elif modo == "xlsx" and args.aplicar:
+        crm.guardar(args.xlsx_out or args.xlsx_in)
 
     print("\n" + "=" * 60)
     print(f"  Leads procesados : {r['total_pendientes']}")
@@ -116,6 +122,8 @@ def main():
                        help="Ruta al JSON del cliente OAuth (default: credenciales/<cliente>_oauth.json).")
     comun.add_argument("--csv-in", help="Modo CSV: leer de este archivo en vez del Sheet.")
     comun.add_argument("--csv-out", help="Modo CSV: guardar el resultado en este archivo.")
+    comun.add_argument("--xlsx-in", help="Modo Excel local: leer/escribir este archivo .xlsx (100%% sin Google).")
+    comun.add_argument("--xlsx-out", help="Modo Excel: guardar en otro .xlsx (default: sobre el mismo).")
 
     pe = sub.add_parser("enriquecer", parents=[comun], help="Trabajo 1: completar emails.")
     pe.add_argument("--limite", type=int, help="Procesar sólo N leads (prueba).")
